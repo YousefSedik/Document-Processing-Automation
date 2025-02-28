@@ -1,0 +1,5 @@
+venv
+.env
+*.pyc
+celerybeat-schedule
+media/*

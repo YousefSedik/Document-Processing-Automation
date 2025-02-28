@@ -1,0 +1,81 @@
+# setup services 
+version: '3'
+
+services:
+  django_server:
+    build: .
+    # command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn --workers 4 --reload --bind  0.0.0.0:8000 document_processing.wsgi:application
+
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./media:/app/media  # Persist media files on the host machine
+    restart: always
+    depends_on:
+      - document_processing_db
+      - document_processing_redis
+
+  document_processing_redis:
+    image: redis:7.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  document_processing_celery:
+    build: .
+    command: celery -A document_processing worker --loglevel=info
+    depends_on:
+      - document_processing_redis
+    volumes:
+      - ./media:/app/media  # Shared media storage
+      - .:/app 
+    restart: always
+  
+  document_processing_celery_beat:
+    build: .
+    command: celery -A document_processing beat --loglevel=info
+    depends_on:
+      - document_processing_redis
+      - document_processing_celery
+    volumes:
+      - ./media:/app/media  # Shared media storage
+      - .:/app 
+    restart: always
+
+  document_processing_flower:
+    build: .
+    command: celery -A document_processing flower --port=5555
+    depends_on:
+      - document_processing_redis
+      - document_processing_celery
+    ports:
+      - "5555:5555"
+    restart: always
+
+  document_processing_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: document_processing
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistent PostgreSQL storage
+
+  document_processing_pg_admin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@postgres.com
+      PGADMIN_DEFAULT_PASSWORD: admin    
+    ports:
+      - "5050:80"                              
+    depends_on:
+      - document_processing_db
+
+volumes:
+  postgres_data:  # Persistent storage for PostgreSQL
+  media_volume:   # Persistent storage for media files (mapped to host)

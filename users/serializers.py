@@ -15,27 +15,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         write_only=True, required=True, validators=[validate_password]
     )
     password2 = serializers.CharField(write_only=True, required=True)
-    
+
     class Meta:
         model = User
         fields = (
-            "username",
-            "password",
-            "password2",
-            "email",
             "first_name",
             "last_name",
+            "email",
+            "password",
+            "password2",
         )
         extra_kwargs = {
             "first_name": {"required": True},
             "last_name": {"required": True},
-            "username": {"max_length": 16,},
+            "username": {
+                "max_length": 16,
+            },
         }
-    def validate_username(self, value: str):
-        value = value.strip()
-        if not value.isalnum():
-            raise serializers.ValidationError("Username must be alphanumeric.")
-        return value.lower()
+
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError(
@@ -46,7 +43,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create(
-            username=validated_data["username"],
             email=validated_data["email"],
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],

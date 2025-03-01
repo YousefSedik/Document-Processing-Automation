@@ -26,6 +26,11 @@ class Document(models.Model):
     file = models.FileField(upload_to="documents/")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def size(self):
+        print(self.file.size)
+        return self.file.size
+
     def save(self, *args, **kwargs):
         if not self.file_type:
             self.file_type = (

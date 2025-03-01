@@ -42,9 +42,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # third party apps
+    "drf_spectacular",
     "rest_framework",
     "rest_framework.authtoken",
     "silk",
+    # local apps
     "core",
     "document",
     "users",
@@ -177,7 +180,13 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Document Processing API",
+    "DESCRIPTION": "API for document processing application",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 AUTH_USER_MODEL = "users.User"

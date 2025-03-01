@@ -8,7 +8,7 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         fields = ["file"]
 
 
-class DocumentRetrieveSerializer(serializers.ModelSerializer):
+class DocumentRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = [
@@ -20,6 +20,7 @@ class DocumentRetrieveSerializer(serializers.ModelSerializer):
             "categories",
             "size",
         ]
+
 
 
 class DocumentListSerializer(serializers.ModelSerializer):

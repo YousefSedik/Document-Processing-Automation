@@ -47,6 +47,52 @@ class CreateDocumentTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Document.objects.count(), 1)
 
+    def test_create_document_with_valid_file_types(self):
+        """
+        Test that a document can be created with valid file types (pdf, png, jpg, jpeg).
+        this test should return a 201 status code.
+        """
+        self.client.login(username=self.e, password=self.p)
+        create_url = reverse("document:create-document")
+        allowed_file_types = [".pdf", ".png", ".jpg", ".jpeg"]
+        for i, format in enumerate(allowed_file_types):
+            data = {
+                "file": SimpleUploadedFile(f"test.{format}", b"file_content"),
+            }
+            response = self.client.post(create_url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Document.objects.count(), i + 1)
+
+    def test_create_document_with_invalid_file_extension(self):
+        """
+        Test that a document cannot be
+        created with an invalid file extension.
+        this test should return a 400 status code.
+        """
+        self.client.login(username=self.e, password=self.p)
+        data = {
+            "file": SimpleUploadedFile("test.txt", b"file_content"),
+        }
+        create_url = reverse("document:create-document")
+        response = self.client.post(create_url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Document.objects.count(), 0)
+
+    def test_create_document_with_invalid_file_size(self):
+        """
+        Test that a document cannot be
+        created with an invalid file size.
+        this test should return a 400 status code.
+        """
+        self.client.login(username=self.e, password=self.p)
+        data = {
+            "file": SimpleUploadedFile("test.pdf", b"file_content" * 1024 * 1024 * 101),
+        }
+        create_url = reverse("document:create-document")
+        response = self.client.post(create_url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Document.objects.count(), 0)
+
 
 class ViewDocumentTestCase(APITestCase):
     def setUp(self):

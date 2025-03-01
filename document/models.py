@@ -1,5 +1,7 @@
-from django.db import models
+from .validators import validate_file_extension, validate_file_size
 from django.contrib.auth import get_user_model
+from django.db import models
+import os
 
 User = get_user_model()
 
@@ -23,13 +25,18 @@ class Document(models.Model):
     summary = models.TextField(blank=True, null=True)
     content = models.JSONField(blank=True, null=True)
     file_type = models.CharField(max_length=10, choices=FileType.choices)
-    file = models.FileField(upload_to="documents/")
+    file = models.FileField(
+        upload_to="documents/", validators=[validate_file_extension, validate_file_size]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
     def size(self):
-        print(self.file.size)
         return self.file.size
+
+    @property
+    def file_name(self):
+        return os.path.basename(self.file.name)
 
     def save(self, *args, **kwargs):
         if not self.file_type:

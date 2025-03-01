@@ -2,11 +2,16 @@ from rest_framework import serializers
 from .models import Document
 
 
+class DocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = ["id", "file_name", "file_type", "created_at", "status", "size"]
+
+
 class DocumentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = ["file"]
-
 
 class DocumentRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,7 +25,6 @@ class DocumentRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
             "categories",
             "size",
         ]
-
 
 
 class DocumentListSerializer(serializers.ModelSerializer):

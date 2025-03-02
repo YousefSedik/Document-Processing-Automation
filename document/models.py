@@ -2,6 +2,9 @@ from .validators import validate_file_extension, validate_file_size
 from django.contrib.auth import get_user_model
 from django.db import models
 import os
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 User = get_user_model()
 
@@ -67,3 +70,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+from .tasks import process_document_task
+
+@receiver(post_save, sender=Document)
+def trigger_document_processing(sender, instance, created, **kwargs):
+    if created:  # Only trigger task for new documents
+        process_document_task.delay(instance.id)

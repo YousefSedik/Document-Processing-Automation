@@ -47,13 +47,18 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "silk",
+    "corsheaders",
     # local apps
     "core",
     "document",
     "users",
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "silk.middleware.SilkyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",

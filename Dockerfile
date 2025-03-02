@@ -9,9 +9,10 @@ ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # 3: update kernel + install dependencies
-RUN apt-get update -y
-
-RUN apt install tesseract-ocr -y
+RUN apt update && apt install -y \
+    tesseract-ocr \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 # 4: create project folder: kernel
 WORKDIR /app
 

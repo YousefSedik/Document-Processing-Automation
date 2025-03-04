@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # third party apps
     "drf_spectacular",
     "rest_framework",
+    "django_rest_passwordreset",
     "rest_framework.authtoken",
     "silk",
     "corsheaders",
@@ -54,9 +55,7 @@ INSTALLED_APPS = [
     "users",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "silk.middleware.SilkyMiddleware",
@@ -182,6 +181,7 @@ SESSION_CACHE_ALIAS = "default"
 # rest_framework settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -197,4 +197,10 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
 AUTH_USER_MODEL = "users.User"
+
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+

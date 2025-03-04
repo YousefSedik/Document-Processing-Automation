@@ -5,6 +5,12 @@ from document.utils.PDFToImagesService.PDFToImageUsingPackage import (
 from document.utils.ImageToTextService.TesseractImageToTextService import (
     TesseractImageToTextService,
 )
+from document.utils.IdentifyCategoryService.IdentifyCategoryUsingGeminiAPI import (
+    IdentifyCategoryUsingGeminiAPI,
+)
+from document.utils.FormatContentService.FormatContentServiceUsingGeminiAPI import (
+    FormatContentServiceUsingGeminiAPI,
+)
 from document.models import Document
 
 
@@ -15,6 +21,8 @@ def process_document_task(document_id):
     # Defining Services
     PDFToImages = PDFToImageUsingPDF2ImagePackage()
     ExtractTextFromImage = TesseractImageToTextService()
+    IdentifyCategory = IdentifyCategoryUsingGeminiAPI()
+    FormatContent = FormatContentServiceUsingGeminiAPI()
     try:
         if document.file_type == Document.FileType.PDF:
             files_paths = PDFToImages.pdf_to_images(document.file.path)
@@ -28,7 +36,10 @@ def process_document_task(document_id):
             if text is None:
                 text = ""
             summary = summary + text + "\n"
-        document.summary = summary
+        categories = IdentifyCategory.identify_category(summary)
+        print(f"Identified categories: {categories}")
+        document.add_categories(categories)
+        document.summary = FormatContent.optimize_content(summary)
         document.status = Document.ProcessingStatus.PROCESSED
     except Exception as e:
         print(f"Failed to process document {document.id}: {e}")

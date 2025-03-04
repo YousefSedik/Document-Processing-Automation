@@ -41,6 +41,13 @@ class Document(models.Model):
     def file_name(self):
         return os.path.basename(self.file.name)
 
+    def add_categories(self, categories: list[str]):
+        for category in categories:
+            try:
+                self.categories.add(Category.objects.get(name=category))
+            except Category.DoesNotExist:
+                print(f"Category {category} does not exist")
+
     def save(self, *args, **kwargs):
         if not self.file_type:
             self.file_type = (
@@ -71,7 +78,9 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
 from .tasks import process_document_task
+
 
 @receiver(post_save, sender=Document)
 def trigger_document_processing(sender, instance, created, **kwargs):

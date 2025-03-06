@@ -42,12 +42,22 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # third party apps
+    "drf_spectacular",
     "rest_framework",
+    "django_rest_passwordreset",
     "rest_framework.authtoken",
     "silk",
+    "corsheaders",
+    # local apps
+    "core",
+    "document",
+    "users",
 ]
 
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "silk.middleware.SilkyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -132,6 +142,12 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -163,11 +179,28 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
 # rest_framework settings
-REST_FRAMEWORK = {}
-
-
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Document Processing API",
+    "DESCRIPTION": "API for document processing application",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+AUTH_USER_MODEL = "users.User"
+
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+

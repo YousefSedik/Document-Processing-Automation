@@ -13,6 +13,7 @@ from .permissions import DocumentPermission
 from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
 
+
 class DocumentCreateView(CreateAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentCreateSerializer
@@ -28,7 +29,9 @@ class DocumentRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
 
     def get_queryset(self):
-        return Document.objects.filter(user=self.request.user)
+        return Document.objects.filter(user=self.request.user).prefetch_related(
+            "categories"
+        )
 
     def get_object(self):
         obj = super().get_object()
@@ -42,4 +45,15 @@ class DocumentListView(ListAPIView):
     serializer_class = DocumentListSerializer
 
     def get_queryset(self):
-        return Document.objects.filter(user=self.request.user)
+        query_params: dict = self.request.query_params.dict()
+        filters = {}
+        if "file_type" in query_params.keys():
+            filters["file_type"] = query_params["file_type"].upper()
+        if "status" in query_params.keys():
+            filters["status"] = query_params["status"].upper()
+        if "categories" in query_params.keys():
+            values = query_params["categories"].split("+")
+            values = [value.strip() for value in values]
+            filters["categories__name__in"] = values
+        
+        return Document.objects.filter(user=self.request.user, **filters)

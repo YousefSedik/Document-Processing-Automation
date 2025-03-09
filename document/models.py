@@ -1,9 +1,15 @@
-from .validators import validate_file_extension, validate_file_size
+from .validators import (
+    validate_file_extension,
+    validate_file_size,
+)
 from django.contrib.auth import get_user_model
 from django.db import models
-import os
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError
+import importlib
+
+import os
 
 
 User = get_user_model()
@@ -26,7 +32,8 @@ class Document(models.Model):
         default=ProcessingStatus.PENDING,
     )
     summary = models.TextField(blank=True, null=True)
-    content = models.JSONField(blank=True, null=True)
+    formatted_content = models.TextField(blank=True, null=True)
+    json_content = models.JSONField(blank=True, null=True)
     file_type = models.CharField(max_length=10, choices=FileType.choices)
     file = models.FileField(
         upload_to="documents/", validators=[validate_file_extension, validate_file_size]
@@ -35,7 +42,13 @@ class Document(models.Model):
 
     @property
     def size(self):
-        return self.file.size
+        try:
+            size_in_bytes = self.file.size
+            size_in_kb = size_in_bytes / 1024
+            size_in_mb = size_in_kb / 1024
+            return f"{size_in_mb:.2f} mb"
+        except FileNotFoundError:
+            return ""
 
     @property
     def file_name(self):
@@ -61,6 +74,7 @@ class Document(models.Model):
         indexes = [
             models.Index(fields=["user"]),
         ]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.file.name} - {self.status}"
@@ -77,6 +91,48 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ServiceConfig(models.Model):
+    class ServiceType(models.TextChoices):
+        PDF_TO_IMAGES = "PDFToImagesService", "PDF To Images"
+        IMAGE_TO_TEXT = "ImageToTextService", "Extract Text From Image"
+        IDENTIFY_CATEGORY = "IdentifyCategoryService", "Identify Category"
+        FORMAT_CONTENT = "FormatContentService", "Format Content"
+        SUMMARY_FROM_CONTENT = "SummaryFromContentService", "Summarize Content"
+        CONTENT_TO_JSON = "ContentToJSONService", "Convert Content to JSON"
+
+    service_type = models.CharField(max_length=50, choices=ServiceType, unique=True)
+    implementation = models.CharField(
+        max_length=255,
+        help_text="Enter the full module path, e.g., 'document.utils.PDFToImagesService.PDFToImageUsingPDF2ImagePackage'",
+    )
+
+    def clean(self):
+        """Validate that the implementation can be imported."""
+        try:
+            module_name, class_name = self.implementation.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            if not hasattr(module, class_name):
+                raise ValidationError(
+                    f"Class '{class_name}' not found in '{module_name}'"
+                )
+        except Exception as e:
+            raise ValidationError(f"Unable to import {self.implementation}: {e}")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Call clean before saving to enforce validation
+        super().save(*args, **kwargs)
+
+    def get_service_instance(self):
+        """Dynamically imports and initializes the selected service class"""
+        module_name, class_name = self.implementation.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        service_class = getattr(module, class_name)
+        return service_class()
+
+    def __str__(self):
+        return f"{self.get_service_type_display()} -> {self.implementation}"
 
 
 from .tasks import process_document_task

@@ -27,8 +27,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -55,7 +53,11 @@ INSTALLED_APPS = [
     "users",
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:5173"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "https://friendly-docs-interactor.lovable.app",
+]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "silk.middleware.SilkyMiddleware",
@@ -74,7 +76,9 @@ ROOT_URLCONF = "document_processing.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            "templates",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -200,7 +204,5 @@ SPECTACULAR_SETTINGS = {
 
 AUTH_USER_MODEL = "users.User"
 
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
